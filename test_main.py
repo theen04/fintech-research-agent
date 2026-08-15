@@ -43,7 +43,7 @@ NOTES:
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from pydantic import ValidationError
-from tools import duckduckgo_tool, wikipedia_search, save_raw_text, calculator
+from src.fintech_ai_agent.tools import duckduckgo_tool, wikipedia_search, save_raw_text, calculator
 import os
 
 # Check if optional dependencies are available

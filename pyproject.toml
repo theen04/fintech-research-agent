@@ -3,9 +3,9 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ai-research-agent"
+name = "fintech-research-agent"
+description = "Autonomous AI research agent for FinTech research using LangChain and OpenAI"
 version = "0.1.0"
-description = "Autonomous AI research agent using LangChain and GPT-4"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -27,8 +27,7 @@ dependencies = [
 
 [project.optional-dependencies]
 search = [
-    "duckduckgo-search>=6.3.5",
-    "wikipedia>=1.4.0",
+    "ddgs",
 ]
 dev = [
     "pytest>=8.3.4",
@@ -37,9 +36,8 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-# Pytest configuration
 minversion = "8.0"
-testpaths = ["."]
+testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -78,3 +76,6 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]
