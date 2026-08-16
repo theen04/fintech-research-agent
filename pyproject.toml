@@ -4,31 +4,41 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fintech-research-agent"
-description = "Autonomous AI research agent for FinTech research using LangChain and OpenAI"
+description = "Autonomous AI research agent for FinTech research using LangChain and Ollama"
 version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = { text = "MIT" }
+
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    { name = "Your Name", email = "your.email@example.com" }
 ]
-keywords = ["ai", "langchain", "agent", "research", "gpt-4"]
+
+keywords = [
+    "ai",
+    "langchain",
+    "ollama",
+    "agent",
+    "research",
+    "fintech",
+]
 
 dependencies = [
     "langchain>=1.2.9",
-    "langchain-openai>=1.1.7",
-    "langchain-community>=0.4.1",
     "langchain-classic>=1.0.1",
+    "langchain-core>=1.0.0",
+    "langchain-ollama>=1.0.0",
     "langgraph>=1.0.8",
-    "openai>=2.17.0",
     "python-dotenv>=1.2.1",
     "pydantic>=2.12.5",
 ]
 
 [project.optional-dependencies]
+
 search = [
     "ddgs",
 ]
+
 dev = [
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
@@ -36,19 +46,30 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-minversion = "8.0"
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
 
-# Register custom markers
-markers = [
-    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
-    "slow: marks tests as slow running (deselect with '-m \"not slow\"')",
+minversion = "8.0"
+
+testpaths = [
+    "tests",
 ]
 
-# Default options
+python_files = [
+    "test_*.py",
+]
+
+python_classes = [
+    "Test*",
+]
+
+python_functions = [
+    "test_*",
+]
+
+markers = [
+    "integration: tests requiring external services or a running LLM",
+    "slow: tests that take longer to execute",
+]
+
 addopts = [
     "-v",
     "--strict-markers",
@@ -57,7 +78,7 @@ addopts = [
 ]
 
 [tool.coverage.run]
-# Coverage configuration
+
 omit = [
     "*/tests/*",
     "*/test_*.py",
@@ -67,7 +88,7 @@ omit = [
 ]
 
 [tool.coverage.report]
-# Coverage reporting
+
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
@@ -78,4 +99,5 @@ exclude_lines = [
 ]
 
 [tool.setuptools.packages.find]
+
 where = ["src"]
