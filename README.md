@@ -1,14 +1,23 @@
 # FinTech AI Research Agent
 
-An autonomous AI research agent that combines LLM reasoning, web-based research tools, structured outputs, and persistent research logging. The project demonstrates how an AI agent can be designed not only to answer questions, but also to create reusable research data for future analytics, machine learning, and retrieval workflows.
+An autonomous AI research agent that combines local LLM reasoning, web-based research tools, structured outputs, and persistent research logging.  
+
+The project demonstrates how an AI agent can move beyond conversational question answering by autonomously selecting research tools, gathering information from multiple sources, synthesizing findings, and returning validated structured data.  
+
+The project is designed to demonstrate **agent architecture, tool orchestration, structured data, testing, and data lifecycle thinking** rather than simply provide a conversational AI interface.  
 
 ## Overview
 
-The FinTech AI Research Agent uses LangChain and OpenAI to research a user-provided topic, select and invoke appropriate tools, synthesize findings, and produce a structured research response.
+The FinTech AI Research Agent uses **Qwen3:30b running locally through Ollama** and LangChain to research a user-provided topic.  
 
-Research findings are also stored in an append-only research log. This creates a persistent corpus that can eventually support downstream tasks such as topic analysis, source evaluation, trend detection, model training, or Retrieval-Augmented Generation (RAG).
+The agent can select between complementary research tools:  
 
-The project is designed to demonstrate **agent architecture and data lifecycle thinking**, rather than simply provide a conversational AI interface.
+- **DuckDuckGo** for current web-based information, recent developments, and multiple perspectives
+- **Wikipedia** for established concepts, historical context, and encyclopedic background
+
+After gathering information, the agent synthesizes its findings into a validated `ResearchResponse` Pydantic model.  
+
+Research findings can also be persisted to an append-only research log, creating a reusable corpus for future analytics, machine learning, and Retrieval-Augmented Generation (RAG) workflows.  
 
 ## Architecture
 
@@ -18,47 +27,80 @@ The project is designed to demonstrate **agent architecture and data lifecycle t
                               ▼
                     ┌───────────────────┐
                     │   Research Agent  │
-                    │   LLM + LangChain │
+                    │     Qwen3:30b     │
+                    │     + LangChain   │
                     └─────────┬─────────┘
+                              │
+                       Tool Selection
                               │
               ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-        DuckDuckGo        Wikipedia       Future Tools
-        Web Search          API
-              │               │               │
-              └───────────────┼───────────────┘
+              ▼                               ▼
+       ┌───────────────┐              ┌────────────────┐
+       │  DuckDuckGo   │              │    Wikipedia   │
+       │  Web Search   │              │      API       │
+       └───────┬───────┘              └───────┬────────┘
+               │                              │
+               └──────────────┬───────────────┘
                               ▼
                     ┌───────────────────┐
-                    │  Research Log     │
-                    │  Append-Only Data │
+                    │ Research Synthesis│
+                    └─────────┬─────────┘
+                              ▼
+                    ┌───────────────────┐
+                    │ ResearchResponse  │
+                    │     Pydantic      │
                     └─────────┬─────────┘
                               │
-                              ▼
-                 Future Analytics / ML / RAG
+                    ┌─────────┴─────────┐
+                    ▼                   ▼
+             Research Log        Future Analytics
+                                      / ML / RAG
 ```
 
 ## Key Capabilities
 
-* **Tool-using AI agent** — dynamically invokes research tools based on the task.
+* **Tool-using AI agent** — dynamically selects research tools based on the information required.
 * **Web research** — retrieves current information through DuckDuckGo.
 * **Knowledge retrieval** — accesses encyclopedic information through the Wikipedia API.
-* **Structured output** — returns research findings using a Pydantic schema.
-* **Persistent research logging** — appends findings to a reusable research corpus.
-* **Modular architecture** — separates agent orchestration, schemas, tools, and application execution.
-* **Extensible design** — additional tools and downstream data workflows can be added without restructuring the core application.
+* **Structured output** — validates research findings against a Pydantic schema.
+* **Source tracking** — records URLs discovered during research.
+* **Tool tracking** — records which research tools were used.
+* **Confidence notes** — captures source quality, limitations, and uncertainty.
+* **Persistent research** logging — creates a reusable research corpus.
+* **Modular architecture** — separates agent orchestration, prompts, schemas, tools, services, and application execution.
+* **Testable design** — separates fast unit tests from live agent integration tests.
+
+## Structured Research Output
+
+The agent returns a `ResearchResponse` containing:  
+
+| **Field**               | **Description**                                                            |
+| ------------------- | ---------------------------------------------------------------------- |
+| `topic`             | Primary topic researched                                               |
+| `executive_summary` | Concise summary of the research                                        |
+| `key_findings`      | Most important findings discovered                                     |
+| `entities`          | Companies, technologies, organizations, people, or concepts identified |
+| `source_urls`       | URLs of sources used during research                                   |
+| `tools_used`        | Research tools invoked by the agent                                    |
+| `confidence_notes`  | Source quality, limitations, and uncertainty                           |
+
 
 ## Technology
 
-| Category        | Technologies                 |
-| --------------- | ---------------------------- |
-| Language        | Python                       |
-| AI / LLM        | OpenAI, LangChain            |
-| Agent Framework | LangChain Classic            |
-| Structured Data | Pydantic                     |
-| Web Research    | DuckDuckGo, Wikipedia API    |
-| Configuration   | python-dotenv                |
-| Testing         | pytest                       |
-| Packaging       | setuptools, `pyproject.toml` |
+| **Category**            | **Technologies**                 |
+| ------------------- | ---------------------------- |
+| Language            | Python 3.11+                 |
+| LLM                 | Qwen3:30b                    |
+| Local LLM Runtime   | Ollama                       |
+| Agent Framework     | LangChain Classic            |
+| Core LangChain      | LangChain Core               |
+| Structured Data     | Pydantic                     |
+| Web Research        | DuckDuckGo (`ddgs`)          |
+| Knowledge Retrieval | Wikipedia API                |
+| Configuration       | python-dotenv                |
+| Testing             | pytest, pytest-cov           |
+| Packaging           | setuptools, `pyproject.toml` |
+
 
 ## Project Structure
 
@@ -67,59 +109,86 @@ fintech_research_agent/
 │
 ├── src/
 │   └── fintech_research_agent/
+│       ├── __init__.py
 │       ├── main.py
 │       ├── agent.py
 │       ├── schemas.py
-│       └── tools.py
+│       │
+│       ├── prompts/
+│       │   ├── __init__.py
+│       │   └── research.py
+│       │
+│       ├── tools/
+│       │   ├── __init__.py
+│       │   ├── web_search.py
+│       │   └── wikipedia.py
+│       │
+│       └── services/
+│           └── ...
 │
 ├── tests/
 │   ├── test_agent.py
 │   └── test_tools.py
 │
 ├── docs/
-│   ├── architecture.png
-│   └── sample_report.md
+│   ├── architecture.txt
+│   ├── sample-report.md
+│   └── testing_guide.md
 │
 ├── outputs/
-│   └── .gitkeep
+│   └── research_notes.txt
 │
-├── .env.example
 ├── pyproject.toml
-└── README.md
-```
+├── README.md
+└── .env.example
 
 ### Module Responsibilities
 
 **`main.py`**
-Application entry point that executes a research request.
+Application entry point that executes a research request and manages the application workflow.  
 
 **`agent.py`**
-Defines the LLM, prompt, tools, agent chain, and `AgentExecutor`.
+Configures the local Qwen3 model, research tools, prompt, tool-calling agent, and `AgentExecutor`.  
 
 **`schemas.py`**
-Defines the Pydantic models used for structured research output.
+Defines the Pydantic models used to validate structured research output.  
+
+**`prompts.py`**
+Contains prompts that define the agent's research strategy, tool-selection guidance, source-quality expectations, and output requirements.  
 
 **`tools.py`**
-Contains the custom research and persistence tools used by the agent.
+Contains the research tools available to the agent.  
 
-**`tests/`**
-Contains unit and integration tests for tools and agent behavior.
+* `web_search.py` — DuckDuckGo web search
+* `wikipedia.py` — Wikipedia API search and retrieval
+
+**`services.py`**  
+Contains application services responsible for supporting workflows such as research persistence and output handling.  
+
+**`tests/`**  
+Contains unit tests for individual components and integration tests for the live agent workflow.  
 
 ## Setup
 
-Create and activate a Python environment, then install the project in editable mode:
+### 1 - Install Ollama
+
+Install and run Ollama, then pull the Qwen3 model:  
+
+```bash
+ollama pull qwen3:30b
+```
+
+Make sure Ollama is running before executing the agent.  
+
+### 2 - Create Python Environment
+
+Create and activate a Python 3.11+ environment, then install the project:  
 
 ```bash
 pip install -e ".[search,dev]"
 ```
 
-Create a `.env` file containing the required OpenAI API key:
-
-```text
-OPENAI_API_KEY=your_api_key_here
-```
-
-Run the agent:
+### 3 - Run the agent
 
 ```bash
 python -m fintech_research_agent.main
@@ -127,37 +196,87 @@ python -m fintech_research_agent.main
 
 ## Example Workflow
 
-A research request is submitted to the agent:
+A research request is submitted to the agent:  
 
 ```text
 Research the adoption of AI and machine learning in FinTech startups.
 ```
 
-The agent can then:
+The agent then:  
 
-1. Search the web for relevant information.
-2. Retrieve supporting information from Wikipedia.
-3. Save research findings to the persistent research log.
-4. Synthesize the collected information.
-5. Return a structured research response containing the topic, summary, sources, and tools used.
+1) Interprets the research question  
+2) Determines which information is needed  
+3) Selects appropriate research tools  
+4) Searches DuckDuckGo and/or Wikipedia  
+5) Evaluates and synthesizes the retrieved information  
+6) Produces a structured ResearchResponse  
+7) Records the tools and sources used  
+8) Persists research findings for future workflows  
+
+## Testing
+
+The project separates fast unit tests from live integration tests.  
+
+### Unit Tests
+Run the standard test suite:  
+
+```bash
+pytest
+```
+
+Unit tests mock external research calls and verify individual components such as:  
+
+* DuckDuckGo search behavior
+* Wikipedia search behavior
+* Error handling
+* Empty search results
+* Agent configuration
+
+### Integration Tests
+The integration test runs the actual Qwen3:30b model and research tools:  
+
+```bash
+pytest -m integration
+```
+
+This validates the complete workflow:  
+
+```raw
+Research Query
+      ↓
+Qwen3:30b
+      ↓
+Tool Selection
+      ↓
+Research Tools
+      ↓
+Research Synthesis
+      ↓
+ResearchResponse
+```
+
+Integration tests are intentionally separated because they require a running local LLM and take significantly longer than unit tests.  
+
 
 ## Research Data Lifecycle
 
-A key design goal is to treat agent output as **data**, rather than disposable responses.
+A key design goal is to treat agent output as **data**, rather than disposable responses.   
 
 ```text
 Research Request
        ↓
 Agent Research
        ↓
-Raw Research Log
+Structured ResearchResponse
        ↓
-Structured Research Data
+Persistent Research Log
        ↓
 Analytics / ML / RAG
 ```
 
-The current implementation focuses on the first stages of this lifecycle. The persistent research corpus provides a foundation for future experimentation with:
+The current implementation establishes the research and structured-output stages while providing the foundation for a reusable research corpus.  
+
+Future workflows could use this corpus for:  
 
 * Topic classification
 * Topic clustering
@@ -167,24 +286,37 @@ The current implementation focuses on the first stages of this lifecycle. The pe
 * Model training datasets
 * Retrieval-Augmented Generation
 
-## Future Development
+## Current Status  
+
+In Development
+
+The current implementation includes:  
+
+* Local Qwen3:30b inference through Ollama
+* LangChain tool-calling agent
+* DuckDuckGo web search
+* Wikipedia retrieval
+* Structured Pydantic output
+* Modular project architecture
+* Unit tests
+* Live agent integration testing
+* Research persistence foundation
+
+
+Future development will focus on evaluation, source quality assessment, additional research tools and downstream analysis of the accumulated research corpus.
+
+## Future Development  
 
 Potential extensions include:
-
 * Additional research and data sources
 * Automated source quality evaluation
 * Structured JSON/JSONL research storage
 * Research topic classification and clustering
 * Vector database integration
 * Retrieval-Augmented Generation
-* Evaluation of agent research quality
+* Agent research-quality evaluation
+* Tool-selection evaluation
 * Downstream machine learning using the accumulated research corpus
-
-## Project Status
-
-**In Development**
-
-The core research agent, tool architecture, structured output, and persistent research logging are implemented. Testing, evaluation, and downstream data workflows are planned as subsequent development stages.
 
 ---
 
