@@ -1,0 +1,17 @@
+src/
+└── fintech_research_agent/
+    │
+    ├── main.py
+    ├── agent.py
+    ├── schemas.py
+    │
+    ├── prompts/
+    │   └── research.py
+    │
+    ├── tools/
+    │   ├── __init__.py
+    │   ├── web_search.py
+    │   └── wikipedia.py
+    │
+    └── services/
+        └── persistence.py

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fintech_research_agent.agent import create_agent_executor
-from fintech_research_agent.tools import save_raw_text
+from fintech_research_agent.services.persistence import save_raw_text
 
 
 def main():
