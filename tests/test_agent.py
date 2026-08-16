@@ -1,7 +1,7 @@
 from unittest.mock import patch
-
+import pytest
 from langchain_classic.agents import AgentExecutor
-
+from fintech_research_agent.schemas import ResearchResponse
 from fintech_research_agent.agent import create_agent_executor
 
 
@@ -59,3 +59,35 @@ class TestCreateAgentExecutor:
         )
 
         assert executor is not None
+
+class TestAgentIntegration:
+    """Integration tests for the full research agent."""
+
+    @pytest.mark.integration
+    def test_agent_returns_structured_response(self):
+        """Test that the live agent returns a valid ResearchResponse."""
+
+        executor = create_agent_executor(
+            run_id="integration-test-001"
+        )
+
+        result = executor.invoke({
+            "query": (
+                "Research the current adoption of AI and machine learning "
+                "in FinTech startups. Focus on major use cases and trends."
+            )
+        })
+
+        assert "output" in result
+
+        response = ResearchResponse.model_validate_json(
+            result["output"]
+        )
+
+        assert response.topic
+        assert response.executive_summary
+        assert response.key_findings
+        assert response.entities
+        assert response.source_urls
+        assert response.tools_used
+        assert response.confidence_notes
